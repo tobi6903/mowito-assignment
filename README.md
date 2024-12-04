@@ -45,7 +45,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Load trained model
 model = models.resnet18(weights=None)
 model.fc = torch.nn.Linear(model.fc.in_features, 2)  # 2 classes: Good and Bad
-model.load_state_dict(torch.load('scratch_detector.pth'))
+model.load_state_dict(torch.load('scratch_detector_4.pth'))
 model = model.to(DEVICE)
 model.eval()
 
@@ -128,7 +128,7 @@ class UNet(nn.Module):
 
 # Load trained model
 model = UNet().to(DEVICE)
-model.load_state_dict(torch.load('segmentation_model.pth'))
+model.load_state_dict(torch.load('segmentation_model_5.pth'))
 model.eval()
 
 # Define transformations
