@@ -39,7 +39,6 @@ import torch
 from torchvision import models, transforms
 from PIL import Image
 
-# Device configuration
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load trained model
@@ -49,7 +48,6 @@ model.load_state_dict(torch.load('scratch_detector_4.pth'))
 model = model.to(DEVICE)
 model.eval()
 
-# Define image transformation
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
@@ -57,9 +55,6 @@ transform = transforms.Compose([
 ])
 
 def predict_anomaly(image_path):
-    """
-    Predict if the image is Good (0) or Bad (1).
-    """
     image = Image.open(image_path).convert("RGB")
     image = transform(image).unsqueeze(0).to(DEVICE)  # Add batch dimension
 
@@ -70,8 +65,7 @@ def predict_anomaly(image_path):
     class_name = "Good" if predicted.item() == 0 else "Bad"
     print(f"Prediction for {image_path}: {class_name}")
 
-# Example usage
-predict_anomaly('path_to_test_image.jpg')
+predict_anomaly('path_to_test_image')
 ```
 
 ### Output
@@ -138,30 +132,37 @@ image_transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-def predict_segmentation(image_path):
-    """
-    Predict the segmentation mask for the input image.
-    """
+def predict(model, image_path, transform, device):
     image = Image.open(image_path).convert("RGB")
-    image_tensor = image_transform(image).unsqueeze(0).to(DEVICE)  # Add batch dimension
+    image = transform(image).unsqueeze(0) 
+    image = image.to(device)
+    model.eval()
 
     with torch.no_grad():
-        output = model(image_tensor).squeeze(0).cpu().numpy()  # Remove batch dimension
-        mask = output > 0.5  # Binary mask
+        output = model(image)
+        output = output.squeeze(0) 
+        output = output.cpu().numpy() 
+        output = (output > 0.5).astype(np.uint8) 
 
-    # Plot the results
-    plt.figure(figsize=(8, 8))
+    
+    output_image = Image.fromarray(output[0] * 255)  
+    plt.figure(figsize=(10, 5))
     plt.subplot(1, 2, 1)
-    plt.imshow(image)
+    plt.imshow(image.squeeze(0).cpu().permute(1, 2, 0)) 
     plt.title("Input Image")
+    plt.axis("off")
 
+    
     plt.subplot(1, 2, 2)
-    plt.imshow(mask, cmap='gray')
-    plt.title("Predicted Segmentation Mask")
+    plt.imshow(output_image, cmap="gray")
+    plt.title("Predicted Mask")
+    plt.axis("off")
+
     plt.show()
 
-# Example usage
-predict_segmentation('path_to_test_image.jpg')
+
+input_image_path = "path of test image" 
+predict(model, input_image_path, image_transform, DEVICE)
 ```
 
 ### Output
